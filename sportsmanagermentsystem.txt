@@ -1,0 +1,296 @@
+'''
+Author: Diya pandey, Shubhi Sharma, Kalpana
+
+Date: 7 FEB - 2022
+
+Project Name: Sports Management System
+
+Language: Python
+
+'''
+
+
+import numpy as np
+import datetime
+import pandas as pd
+import winsound
+from numpy import random as ra
+import mysql.connector
+import time
+import pyttsx3
+import matplotlib.pyplot as plt
+
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
+rate = engine.getProperty('rate')
+
+
+mydb = mysql.connector.connect(
+    host="127.0.0.1", user="root", password="", database="buyitemdata")
+cur = mydb.cursor()
+
+
+class items:
+    def __init__(self, listofitems):
+        self.items = listofitems
+
+    def displayAvailableItems(self):
+        # print(f"\n{len(self.items)} ITEMS ARE AVAILABLE: ")
+        # for item in self.items:
+        #     print(" ⚽️-- " + item)
+        # print("\n")
+        df = pd.read_csv('E:\sports management system\itemslist2.csv')
+        print(df)
+        print("\n")
+        engine.say("HERE IS THE LIST OF AVAILABLE ITEMS")
+        engine.runAndWait()
+
+    def buyitem(self):
+        name = input("ENTER YOUR NAME: ").upper()
+        itemnames = input("ENTER NAME OF YOUR ITEM: ").upper()
+        quantity = int(input("ENTER QUANTITY: "))
+        totalcost = self.items.get(itemnames)*quantity
+        if itemnames not in self.items:
+            print(f"{itemnames} IS NOT AVAILABLE ON SHOP\n")
+        else:
+            print(f'''
+          \t\t\t ********* SPORTS SHOP MANAGEMENT SYSTEM ********
+          \t\t *******************************************************
+          \t\t\t\t{itemnames} ISSUED TO {name}
+          \t\t\t\t1 {itemnames} COST = {self.items.get(itemnames)}
+          \t\t\t\tTOTAL AMOUNT PAID {self.items.get(itemnames)} x {quantity}: {totalcost}
+          \t\t *******************************************************
+
+         ''')
+        engine.say(f'{itemnames} issued to {name} total cost is {totalcost}')
+        engine.runAndWait()
+        insertdata = "INSERT INTO customers (name, item, amount, cost) VALUES(%s, %s, %s, %s)"
+        value = [name, itemnames, quantity, totalcost]
+        cur.execute(insertdata, value)
+        mydb.commit()
+        print(cur.rowcount, "RECORD ADDED")
+
+    def orderitem(self):
+        smallitem = ["BALL", "TENNIS BALL", "GLOVES", "HELMET"]
+        largeitem = ["BAT", "FOOTBALL", "BASKETBALL", "PADS"]
+        for x in smallitem:
+            print(f"⚾️ ➛ {x}")
+
+        for y in largeitem:
+            print(f"⚾️ ➛ {y}")
+
+        print("ENTER DONE IF YOU WANT TO EXIT MAX 3 ORDERS ALLOWED")
+        i = 0
+        a = 1
+        orders = []
+        total_price = []
+        while i < 3:
+            ordername = input(f"Enter your {a}st item name: ").upper()
+            i += 1
+            a += 1
+            orders.append(ordername)
+            if ordername == "DONE":
+                break
+
+        print("\n")
+        for items in orders:
+            if items in smallitem:
+                price1 = ra.randint(70, 150)
+                total_price.append(price1)
+                print(f"{items} SUCCESFULLY ORDERED \n ORDER PRICE: {price1}")
+                time.sleep(2)
+                print("ORDER WILL BE ADDED SOON")
+                print("\n")
+
+            elif items in largeitem:
+                price2 = ra.randint(200, 600)
+                total_price.append(price2)
+                print(f"{items} SUCCESFULLY ORDERED \n ORDER PRICE: {price2}")
+                time.sleep(2)
+                print("ORDER WILL BE ADDED SOON")
+                print("\n")
+
+            elif items == 'DONE':
+                continue
+
+            else:
+                print("ITEM IS NOT AVAILABLE IN ORDER LIST\n")
+
+            for price in total_price:
+                print(f"{price} + ")
+        print("\n")
+        total_price1 = sum(total_price)
+        print(f"TOTAL AMOUNT PAID = {total_price1}")
+
+    def generatebill(self):
+        bill_items = []
+        date_time = datetime.datetime.now()
+        date = date_time.strftime("%x")
+        time2 = date_time.strftime("%X")
+        customer = input("ENTER CUSTOMER NAME: ").upper()
+        print("\n")
+        item = list(input("ENTER ITEM NAME: ").upper().split(','))
+        bill_items.extend(item)
+        print("\n")
+        amount = []
+        index = 0
+        for x in range(len(bill_items)):
+            a = int(input(f"ENTER AMOUNT OF {bill_items[index]}: "))
+            amount.append(a)
+            index += 1
+
+        print("\n")
+        cost = []
+        product = []
+        i = 0
+        for y in range(len(bill_items)):
+            cost2 = int(input(f"ENTER COST OF {bill_items[i]}: "))
+            cost.append(cost2)
+            i += 1
+
+        for num1, num2 in zip(cost, amount):
+            product.append(num1 * num2)
+
+        totalcost = sum(product)
+        item_list = ''.join(bill_items)
+        amount_list = str(amount)[1:-1]
+        print("\n")
+        print("GENERATING YOUR BILL...")
+        time.sleep(3)
+        print("\n")
+        print(f'''\t************************************
+        * ➡️ | CUSTOMER NAME : {customer}            
+        *                                      
+        * ➡️ | ITEM : {item_list}                         
+        *                                     
+        * ➡️ | AMOUNT : {amount_list}                     
+        *                                       
+        * ➡️ | TOTAL COST : {totalcost}                 
+        *                                      
+        * ➡️ | DATE : {date}   
+        *  
+        * ➡️ | TIME : {time2}
+        *
+        *            THANK YOU                          
+        ************************************\n''')
+
+    def showcustomerdata(self):
+        cur.execute("SELECT * FROM customers")
+        myresult = cur.fetchall()
+        for x in myresult:
+            print(x)
+
+    def deletecustomerdata(self):
+        print("4 COLUMNS AVAILABLE ->\n1. NAME\n2. ITEM\n3. AMOUNT\n4. COST")
+        where = input("FROM WHERE: ")
+        place_value = ""
+        if type(where) == str:
+            where.upper()
+        if where == 1 or "NAME":
+            place_value = "name"
+        if where == 2 or "ITEM":
+            place_value = "item"
+        if where == 3 or "AMOUNT":
+            place_value = "amount"
+        if where == 4 or "COST":
+            place_value = "cost"
+        user_value = input("VALUE: ")
+        print("\n")
+        if type(user_value) == str:
+            user_value.upper()
+        delData = "DELETE FROM customers WHERE {place} = '{value}'".format(
+            value=user_value, place=place_value)
+        cur.execute(delData)
+        mydb.commit()
+        print(cur.rowcount, "RECORD DELETED")
+
+    def piechart(self):
+        nameofitem = []
+        amountofitem = []
+        
+        cur.execute("SELECT item FROM customers")
+        result = cur.fetchall()
+        for x in result:
+            nameofitem.append(x[0])
+            
+        nameofitem2 = np.unique(nameofitem)
+        
+        i = 0
+        b = 0
+        
+        while i < len(nameofitem2):
+            dataselect = "SELECT amount FROM customers WHERE item = '{}'".format(nameofitem2[b])
+            cur.execute(dataselect)
+            amountresult = np.sum(cur.fetchall())
+            amountofitem.append(amountresult)
+            i += 1
+            b += 1
+        plt.pie(amountofitem, labels=nameofitem2, autopct='%1.1f%%')
+        plt.show()
+
+
+def dashboard():
+    if __name__ == "__main__":
+        Sportsitem = items({"BAT": 380,
+                            "FOOTBALL": 600,
+                            "CRICKET BALL": 80,
+                            "BASKETBALL": 510,
+                            "CRICKET HELMET": 250,
+                            "CARROM": 200,
+                            "LUDO": 70,
+                            "CHESS": 150,
+                            "CARDS": 90,
+                            "BUISNESS CHESS": 110})
+
+        print(f'''
+          \t\t\t\t{"✩ "*50}
+          \t\t\t\t\t\t\t✩✩✩✩✩✩✩✩✩✩✩ SPORTS SHOP MANAGEMENT SYSTEM ✩✩✩✩✩✩✩✩✩✩✩
+          \t\t\t\t{"✩ "*50}
+          ''')
+        print("CHOOSE WHAT YOU WANT TO DO:-\n1. LIST OF ALL AVAILABLE ITEMS\n2. BUY ITEM\n3. ORDER ITEM\n4. GENERATE BILL\n5. SHOW CUSTOMER DATA\n6. REMOVE DATA\n7. SHOW DATA CHART  \n8. EXIT")
+        engine.say(
+            'WELCOME TO SPORTS SHOP MANAGEMENT SYSTEM PLEASE ENTER YOUR CHOICE')
+        engine.setProperty('rare', rate-100)
+        engine.runAndWait()
+        while(True):
+            try:
+                user_response = int(input("ENTER YOUR CHOICE: "))
+                print("\n")
+
+                if user_response == 1:
+                    Sportsitem.displayAvailableItems()
+                elif user_response == 2:
+                    Sportsitem.buyitem()
+                elif user_response == 3:
+                    Sportsitem.orderitem()
+                elif user_response == 4:
+                    Sportsitem.generatebill()
+                elif user_response == 5:
+                    Sportsitem.showcustomerdata()
+                elif user_response == 6:
+                    Sportsitem.deletecustomerdata()
+                elif user_response == 7:
+                    Sportsitem.piechart()
+                elif user_response == 8:
+                    exit()
+
+            except Exception as e:
+                print(f"{e}---> INVALID INPUT! \n")
+                # 1000 = 1 SECOND
+                winsound.MessageBeep(2000)
+                time.sleep(2)
+                engine.say('PLEASE ENTER VALID INPUT')
+                engine.runAndWait()
+
+
+def passwordaccess():
+    password = "#1SPORTSHOP"
+    print("\n")
+    password1 = input("ENTER YOUR PASSWORD: ").upper()
+    if password1 == password:
+        dashboard()
+    else:
+        print("wrong password plz enter again")
+        passwordaccess()
+passwordaccess()
