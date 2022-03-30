@@ -1,5 +1,5 @@
 '''
-Author: Diya pandey, Shubhi Sharma, Kalpana
+Author: KABIR
 
 Date: 7 FEB - 2022
 
@@ -184,23 +184,10 @@ class items:
     def deletecustomerdata(self):
         print("4 COLUMNS AVAILABLE ->\n1. NAME\n2. ITEM\n3. AMOUNT\n4. COST")
         where = input("FROM WHERE: ")
-        place_value = ""
-        if type(where) == str:
-            where.upper()
-        if where == 1 or "NAME":
-            place_value = "name"
-        if where == 2 or "ITEM":
-            place_value = "item"
-        if where == 3 or "AMOUNT":
-            place_value = "amount"
-        if where == 4 or "COST":
-            place_value = "cost"
-        user_value = input("VALUE: ")
+        user_value = input("VALUE: ").upper()
         print("\n")
-        if type(user_value) == str:
-            user_value.upper()
         delData = "DELETE FROM customers WHERE {place} = '{value}'".format(
-            value=user_value, place=place_value)
+            value=user_value, place=where)
         cur.execute(delData)
         mydb.commit()
         print(cur.rowcount, "RECORD DELETED")
